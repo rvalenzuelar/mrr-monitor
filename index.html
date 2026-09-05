@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Micro Rain Radar — Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --tinta:#13232E;
+    --tinta-suave:#4A5C66;
+    --papel:#F6F7F5;
+    --panel:#FFFFFF;
+    --linea:#D8DEDA;
+    --radar:#2C6E9B;
+    --ok:#1C6B51;
+    --ok-fondo:#E8F2ED;
+    --alerta:#8A5A0B;
+    --alerta-fondo:#FBF1DE;
+    --falla:#9E362F;
+    --falla-fondo:#F9E9E7;
+    --sombra:0 1px 2px rgba(19,35,46,.06), 0 8px 24px rgba(19,35,46,.05);
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    background:var(--papel);
+    color:var(--tinta);
+    font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .envoltorio{max-width:1080px;margin:0 auto;padding:32px 24px 56px}
+
+  /* ---------- Encabezado ---------- */
+  header{
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 20px;
+    padding-bottom:20px;border-bottom:1px solid var(--linea);
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--radar);font-weight:600;width:100%;
+  }
+  h1{
+    font-family:"Archivo",-apple-system,"Segoe UI",sans-serif;
+    font-weight:700;font-size:clamp(26px,4.2vw,38px);
+    letter-spacing:-.02em;margin:0;
+  }
+  .sitio{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:13px;color:var(--tinta-suave);
+  }
+
+  /* ---------- Lectura de estado (elemento firma) ---------- */
+  .lectura{
+    margin:22px 0 0;padding:16px 18px;
+    background:var(--panel);border:1px solid var(--linea);
+    border-left:4px solid var(--tinta-suave);
+    border-radius:3px;box-shadow:var(--sombra);
+  }
+  .lectura[data-estado="ok"]{border-left-color:var(--ok);background:var(--ok-fondo)}
+  .lectura[data-estado="alerta"]{border-left-color:var(--alerta);background:var(--alerta-fondo)}
+  .lectura[data-estado="falla"]{border-left-color:var(--falla);background:var(--falla-fondo)}
+
+  .lectura-linea{display:flex;align-items:center;gap:11px}
+  .punto{
+    width:9px;height:9px;border-radius:50%;flex:0 0 auto;
+    background:var(--tinta-suave);
+  }
+  .lectura[data-estado="ok"] .punto{background:var(--ok);animation:latido 2.8s ease-in-out infinite}
+  .lectura[data-estado="alerta"] .punto{background:var(--alerta)}
+  .lectura[data-estado="falla"] .punto{background:var(--falla)}
+  @keyframes latido{0%,100%{opacity:1}50%{opacity:.35}}
+  @media (prefers-reduced-motion:reduce){.punto{animation:none !important}}
+
+  .titular{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:14px;font-weight:600;letter-spacing:.01em;
+  }
+  .lectura[data-estado="ok"] .titular{color:var(--ok)}
+  .lectura[data-estado="alerta"] .titular{color:var(--alerta)}
+  .lectura[data-estado="falla"] .titular{color:var(--falla)}
+
+  .detalle{
+    margin:9px 0 0 20px;font-size:13.5px;color:var(--tinta-suave);
+  }
+  .detalle code{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;
+    background:rgba(19,35,46,.05);padding:1px 5px;border-radius:2px;
+  }
+
+  .marcas{
+    display:flex;flex-wrap:wrap;gap:6px 22px;
+    margin:12px 0 0 20px;padding-top:11px;
+    border-top:1px solid rgba(19,35,46,.09);
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:11.5px;color:var(--tinta-suave);
+  }
+  .marcas b{font-weight:500;color:var(--tinta);letter-spacing:.02em}
+
+  /* ---------- Figura ---------- */
+  .lamina{
+    margin-top:26px;padding:14px;
+    background:var(--panel);border:1px solid var(--linea);
+    border-radius:3px;box-shadow:var(--sombra);
+  }
+  .lamina img{display:block;width:100%;height:auto;border-radius:2px}
+  .lamina.sin-figura{
+    padding:64px 24px;text-align:center;color:var(--tinta-suave);
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px;
+  }
+  figcaption{
+    margin-top:11px;font-size:12.5px;color:var(--tinta-suave);
+  }
+
+  /* ---------- Pie con logos ---------- */
+  footer{
+    margin-top:44px;padding-top:22px;border-top:1px solid var(--linea);
+  }
+  .logos{
+    display:flex;flex-wrap:wrap;align-items:center;gap:26px 38px;
+  }
+  .logos img{
+    height:44px;width:auto;max-width:190px;object-fit:contain;
+  }
+  .nota{
+    margin-top:20px;font-size:12.5px;color:var(--tinta-suave);max-width:62ch;
+  }
+  .nota a{color:var(--radar)}
+  a:focus-visible,button:focus-visible{
+    outline:2px solid var(--radar);outline-offset:2px;
+  }
+
+  @media (max-width:560px){
+    .envoltorio{padding:24px 16px 40px}
+    .logos img{height:34px}
+  }
+</style>
+</head>
+<body>
+<div class="envoltorio">
+
+  <header>
+    <span class="eyebrow">Perfilador vertical de precipitación</span>
+    <h1>Micro Rain Radar</h1>
+    <span class="sitio" id="sitio">Chacayes, Región de O'Higgins</span>
+  </header>
+
+  <!-- Caja de estado: se rellena desde status.json -->
+  <section class="lectura" id="lectura" data-estado="cargando" aria-live="polite">
+    <div class="lectura-linea">
+      <span class="punto" aria-hidden="true"></span>
+      <span class="titular" id="titular">Leyendo estado de la publicación…</span>
+    </div>
+    <p class="detalle" id="detalle" hidden></p>
+    <div class="marcas" id="marcas" hidden></div>
+  </section>
+
+  <figure class="lamina" id="lamina">
+    <img id="figura" alt="Figura más reciente generada a partir de los datos del Micro Rain Radar">
+    <figcaption id="pie"></figcaption>
+  </figure>
+
+  <footer>
+    <div class="logos" id="logos">
+      <img src="logos/uoh.png"    alt="Universidad de O'Higgins">
+      <img src="logos/uchile.png" alt="Universidad de Chile">
+      <img src="logos/jdv.png"    alt="JDV">
+      <img src="logos/ph.png"     alt="PH">
+    </div>
+    <p class="nota">
+      La figura se regenera automáticamente a partir de los datos del radar.
+      Esta página se actualiza sola cada 5 minutos.
+    </p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var UMBRAL_MIN   = 90;       // minutos sin actualizar antes de avisar
+  var REFRESCO_MS  = 5 * 60e3; // recarga del estado en el navegador
+  var ZONA         = "America/Santiago";
+
+  var lectura = document.getElementById("lectura");
+  var titular = document.getElementById("titular");
+  var detalle = document.getElementById("detalle");
+  var marcas  = document.getElementById("marcas");
+  var lamina  = document.getElementById("lamina");
+  var figura  = document.getElementById("figura");
+  var pie     = document.getElementById("pie");
+
+  // Los logos que no existan simplemente no se muestran.
+  Array.prototype.forEach.call(
+    document.querySelectorAll("#logos img"),
+    function (img) { img.onerror = function () { img.style.display = "none"; }; }
+  );
+
+  function pintar(estado, texto, explicacion) {
+    lectura.setAttribute("data-estado", estado);
+    titular.textContent = texto;
+    if (explicacion) { detalle.textContent = explicacion; detalle.hidden = false; }
+    else             { detalle.hidden = true; }
+  }
+
+  function fecha(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    return isNaN(d) ? null : d;
+  }
+
+  function comoTexto(d) {
+    return new Intl.DateTimeFormat("es-CL", {
+      dateStyle: "medium", timeStyle: "short", timeZone: ZONA
+    }).format(d);
+  }
+
+  function haceCuanto(min) {
+    if (min < 1)    return "hace menos de un minuto";
+    if (min < 60)   return "hace " + min + " min";
+    var h = Math.floor(min / 60);
+    if (h < 48)     return "hace " + h + " h";
+    return "hace " + Math.floor(h / 24) + " días";
+  }
+
+  function ponerMarcas(items) {
+    marcas.innerHTML = "";
+    items.forEach(function (t) {
+      if (!t) return;
+      var s = document.createElement("span");
+      s.innerHTML = "<b>" + t[0] + "</b> " + t[1];
+      marcas.appendChild(s);
+    });
+    marcas.hidden = items.length === 0;
+  }
+
+  function render(st) {
+    var generado = fecha(st.generado);
+    var dato     = fecha(st.dato_hasta);
+    var minutos  = generado ? Math.round((Date.now() - generado) / 60000) : null;
+    var umbral   = st.umbral_min || UMBRAL_MIN;
+
+    // La figura siempre se muestra si existe: en caso de falla es la última buena.
+    if (st.figura) {
+      figura.src = st.figura + "?v=" + encodeURIComponent(st.generado || Date.now());
+      figura.onerror = function () {
+        lamina.classList.add("sin-figura");
+        lamina.innerHTML = "Todavía no hay ninguna figura publicada.";
+      };
+      pie.textContent = dato
+        ? "Datos hasta " + comoTexto(dato) + " (hora de Chile continental)."
+        : "";
+    }
+
+    ponerMarcas([
+      generado ? ["Última ejecución", comoTexto(generado)] : null,
+      dato     ? ["Último dato",      comoTexto(dato)]     : null,
+      st.etapa ? ["Etapa",            st.etapa]            : null
+    ]);
+
+    if (st.estado === "error") {
+      pintar("falla",
+        "La última actualización falló",
+        (st.mensaje || "El proceso terminó con error.") +
+        " La figura que se muestra es la última que se generó correctamente" +
+        (generado ? ", " + haceCuanto(minutos) + "." : "."));
+      return;
+    }
+
+    if (minutos !== null && minutos > umbral) {
+      pintar("alerta",
+        "Sin actualizaciones recientes",
+        "La última ejecución correcta fue " + haceCuanto(minutos) +
+        ", por sobre el margen esperado de " + umbral + " minutos. " +
+        "El proceso de publicación puede estar detenido.");
+      return;
+    }
+
+    pintar("ok",
+      "Imagen actualizada" + (minutos !== null ? " · " + haceCuanto(minutos) : ""),
+      st.mensaje || null);
+  }
+
+  function cargar() {
+    fetch("status.json", { cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(render)
+      .catch(function (e) {
+        pintar("falla",
+          "No se pudo leer el estado de la publicación",
+          "El archivo status.json no está disponible o no es legible (" + e.message +
+          "). La figura que se muestra puede no ser la más reciente.");
+        // Aun así se intenta mostrar la figura.
+        if (!figura.src) figura.src = "figura.png?v=" + Date.now();
+      });
+  }
+
+  cargar();
+  setInterval(cargar, REFRESCO_MS);
+})();
+</script>
+</body>
+</html>
