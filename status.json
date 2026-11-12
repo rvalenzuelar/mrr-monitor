@@ -1,0 +1,9 @@
+{
+  "estado": "error",
+  "generado": "2026-11-12T05:08:17-03:00",
+  "umbral_min": 90,
+  "figura": "figura.png",
+  "dato_hasta": "2026-11-11T23:07:58",
+  "etapa": "descarga",
+  "mensaje": "rclone terminó con código 1"
+}
